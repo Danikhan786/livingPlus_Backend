@@ -6,7 +6,7 @@ const userSchema = mongoose.Schema({
   fcmToken: { type: String },
   fName: { type: String },
   lName: { type: String },
-  image: { type: String },
+  image: { type: String ,default: null},
   phoneNumber: { type: String },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },

@@ -7,7 +7,6 @@ const signUpUser = asyncHandler(async (req, res) => {
   const {
     fName,
     lName,
-    image,
     email,
     phoneNumber,
     password,
@@ -39,7 +38,6 @@ const signUpUser = asyncHandler(async (req, res) => {
     const user = new User({
       fName,
       lName,
-      image,
       email,
       phoneNumber,
       password,
