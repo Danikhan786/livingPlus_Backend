@@ -1,4 +1,4 @@
-const asyncHandler = require("express-async-handler");
+  const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
@@ -18,6 +18,10 @@ const signUpUser = asyncHandler(async (req, res) => {
     heightUnit
   } = req.body;
 
+   // Basic validation
+   if (!fName || !lName || !email || !phoneNumber || !password || !gender || !age || !height || !weight || !weightUnit || !heightUnit) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
   try {
     // Check if email or phone number already exists
     const existingEmail = await User.findOne({ email });
@@ -50,7 +54,7 @@ const signUpUser = asyncHandler(async (req, res) => {
     res.status(201).json({
       message: "User registered successfully",
       user: {
-        id: user.id,
+        id: user._id,
         fName: user.fName,
         lName: user.lName,
         email: user.email,
@@ -87,7 +91,7 @@ const loginUser = asyncHandler(async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET,
+      process.env.ACCESS_TOKEN_SECERT,
       { expiresIn: "7d" }
     );
 
@@ -95,7 +99,7 @@ const loginUser = asyncHandler(async (req, res) => {
       message: "Login successful",
       token,
       user: {
-        id: user.id,
+        id: user._id,
         fName: user.fName,
         lName: user.lName,
         email: user.email,
@@ -147,21 +151,57 @@ const editUserProfile = asyncHandler(async (req, res) => {
 });
 
 
+// const updatePassword = asyncHandler(async (req, res) => {
+//   const { userId } = req.params;
+//   const { currentPassword, newPassword, confirmPassword } = req.body;
+
+//   try {
+//     // Find user by ID
+//     const user = await User.findById(userId);
+
+//     // Check if user exists
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+//     if (!currentPassword || !newPassword || !confirmPassword) {
+//       return res.status(400).json({ message: "Please provide all required fields" });
+//     }
+//     // Check if current password is correct
+//     const isMatch = await bcrypt.compare(currentPassword, user.password);
+//     if (!isMatch) {
+//       return res.status(401).json({ message: "Current password is incorrect" });
+//     }
+
+//     // Check if new password and confirm password match
+//     if (newPassword !== confirmPassword) {
+//       return res.status(400).json({ message: "New password and confirm password do not match" });
+//     }
+
+//     // Hash the new password
+//     const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+//     // Update user's password
+//     user.password = hashedPassword;
+//     await user.save();
+
+//     res.status(200).json({ message: "Password updated successfully" });
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// });
+
 const updatePassword = asyncHandler(async (req, res) => {
   const { userId } = req.params;
   const { currentPassword, newPassword, confirmPassword } = req.body;
 
   try {
-    // Find user by ID
     const user = await User.findById(userId);
-
-    // Check if user exists
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Check if current password is correct
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    // Compare the current password with the hashed password stored in the database
+    const isMatch = await user.matchPassword(currentPassword);
     if (!isMatch) {
       return res.status(401).json({ message: "Current password is incorrect" });
     }
@@ -171,11 +211,8 @@ const updatePassword = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: "New password and confirm password do not match" });
     }
 
-    // Hash the new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    // Update user's password
-    user.password = hashedPassword;
+    // Update the user's password; the `pre('save')` middleware will hash it
+    user.password = newPassword;
     await user.save();
 
     res.status(200).json({ message: "Password updated successfully" });
@@ -183,8 +220,6 @@ const updatePassword = asyncHandler(async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
-
 
 
 
