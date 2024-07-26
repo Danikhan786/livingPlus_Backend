@@ -12,8 +12,18 @@ const userSchema = mongoose.Schema({
   password: { type: String, required: true },
   gender: { type: String },
   age: { type: Number },
-  height: { type: Number, get: v => Number(v), set: v => Number(v) },
-  weight: { type: Number, get: v => Number(v), set: v => Number(v) },
+  height: { 
+    type: Number, 
+    get: v => parseFloat(v).toFixed(2), 
+    set: v => parseFloat(v).toFixed(2),
+    required: true 
+  },
+  weight: { 
+    type: Number, 
+    get: v => parseFloat(v).toFixed(2), 
+    set: v => parseFloat(v).toFixed(2),
+    required: true 
+  },
   weightUnit: { type: String },
   heightUnit: { type: String },
   totalWorkoutTime: { type: Number, default: 0 },
