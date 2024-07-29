@@ -220,7 +220,31 @@ const updatePassword = asyncHandler(async (req, res) => {
   }
 });
 
+let blacklistedTokens = [];
+// Logout user
+const logoutUser = asyncHandler(async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    // Add token to blacklist
+    blacklistedTokens.push(token);
+
+    res.status(200).json({ message: "Logout successful" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Middleware to check if token is blacklisted
+const checkBlacklistedToken = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+
+  if (blacklistedTokens.includes(token)) {
+    return res.status(401).json({ message: "Token is blacklisted" });
+  }
+
+  next();
+};
 
 
-
-module.exports = { signUpUser, loginUser, editUserProfile, updatePassword, getUserById};
+module.exports = { signUpUser, loginUser, editUserProfile, updatePassword, getUserById, logoutUser, checkBlacklistedToken};

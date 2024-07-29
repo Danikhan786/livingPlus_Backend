@@ -9,6 +9,7 @@ router.post("/signup", userController.signUpUser);
 
 // Route for user login
 router.post("/login", userController.loginUser);
+router.post('/logout', userController.logoutUser);
 
 // Route for user get by id
 router.get("/profile/:userId", userController.getUserById);
@@ -17,5 +18,8 @@ router.put("/profile/:userId", userController.editUserProfile);
 
 // Route for updating user password
 router.put("/password/:userId", userController.updatePassword);
+
+// Apply the middleware to protect routes
+router.use(userController.checkBlacklistedToken);
 
 module.exports = router;
