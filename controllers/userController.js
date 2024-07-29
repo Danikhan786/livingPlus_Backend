@@ -1,4 +1,4 @@
-  const asyncHandler = require("express-async-handler");
+const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
@@ -142,7 +142,10 @@ const editUserProfile = asyncHandler(async (req, res) => {
         height: user.height,
         weight: user.weight,
         weightUnit: user.weightUnit,
-        heightUnit: user.heightUnit
+        heightUnit: user.heightUnit,
+        totalWorkoutTime: user.totalWorkoutTime,
+        totalCaloriesBurn: user.totalCaloriesBurn,
+        totalWorkoutDone: user.totalPoints
       }
     });
   } catch (error) {
@@ -165,13 +168,17 @@ const getUserById = asyncHandler(async (req, res) => {
         fName: user.fName,
         lName: user.lName,
         email: user.email,
+        image: user.image,
         phoneNumber: user.phoneNumber,
         gender: user.gender,
         age: user.age,
         height: user.height,
         weight: user.weight,
         weightUnit: user.weightUnit,
-        heightUnit: user.heightUnit
+        heightUnit: user.heightUnit,
+        totalWorkoutTime: user.totalWorkoutTime,
+        totalCaloriesBurn: user.totalCaloriesBurn,
+        totalWorkoutDone: user.totalPoints
       }
     });
   } catch (error) {
