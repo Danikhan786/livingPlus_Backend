@@ -10,6 +10,8 @@ router.post("/signup", userController.signUpUser);
 // Route for user login
 router.post("/login", userController.loginUser);
 
+// Route for user get by id
+router.get("/profile/:userId", userController.getUserById);
 // Route for editing user profile
 router.put("/profile/:userId", userController.editUserProfile);
 

@@ -149,46 +149,35 @@ const editUserProfile = asyncHandler(async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
-
-// const updatePassword = asyncHandler(async (req, res) => {
-//   const { userId } = req.params;
-//   const { currentPassword, newPassword, confirmPassword } = req.body;
-
-//   try {
-//     // Find user by ID
-//     const user = await User.findById(userId);
-
-//     // Check if user exists
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-//     if (!currentPassword || !newPassword || !confirmPassword) {
-//       return res.status(400).json({ message: "Please provide all required fields" });
-//     }
-//     // Check if current password is correct
-//     const isMatch = await bcrypt.compare(currentPassword, user.password);
-//     if (!isMatch) {
-//       return res.status(401).json({ message: "Current password is incorrect" });
-//     }
-
-//     // Check if new password and confirm password match
-//     if (newPassword !== confirmPassword) {
-//       return res.status(400).json({ message: "New password and confirm password do not match" });
-//     }
-
-//     // Hash the new password
-//     const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-//     // Update user's password
-//     user.password = hashedPassword;
-//     await user.save();
-
-//     res.status(200).json({ message: "Password updated successfully" });
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// });
+// Get user by ID
+const getUserById = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  try {
+    // Find user by ID
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({
+      message: "User retrieved successfully",
+      user: {
+        id: user.id,
+        fName: user.fName,
+        lName: user.lName,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        gender: user.gender,
+        age: user.age,
+        height: user.height,
+        weight: user.weight,
+        weightUnit: user.weightUnit,
+        heightUnit: user.heightUnit
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 const updatePassword = asyncHandler(async (req, res) => {
   const { userId } = req.params;
@@ -224,4 +213,4 @@ const updatePassword = asyncHandler(async (req, res) => {
 
 
 
-module.exports = { signUpUser, loginUser, editUserProfile, updatePassword };
+module.exports = { signUpUser, loginUser, editUserProfile, updatePassword, getUserById};
