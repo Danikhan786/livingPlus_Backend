@@ -145,7 +145,8 @@ const editUserProfile = asyncHandler(async (req, res) => {
         heightUnit: user.heightUnit,
         totalWorkoutTime: user.totalWorkoutTime,
         totalCaloriesBurn: user.totalCaloriesBurn,
-        totalWorkoutDone: user.totalPoints
+        totalWorkoutDone: user.totalWorkoutDone,
+        totalPoints: user.totalPoints
       }
     });
   } catch (error) {
@@ -177,8 +178,10 @@ const getUserById = asyncHandler(async (req, res) => {
         weightUnit: user.weightUnit,
         heightUnit: user.heightUnit,
         totalWorkoutTime: user.totalWorkoutTime,
-        totalCaloriesBurn: user.totalCaloriesBurn,
-        totalWorkoutDone: user.totalPoints
+        totalCaloriesBurn: user.totalCaloriesBurn, 
+        totalWorkoutDone: user.totalWorkoutDone,
+        totalPoints: user.totalPoints
+        
       }
     });
   } catch (error) {
