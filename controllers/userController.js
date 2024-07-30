@@ -100,6 +100,7 @@ const loginUser = asyncHandler(async (req, res) => {
       token,
       user: {
         id: user._id,
+        fcmToken: user.fcmToken,
         fName: user.fName,
         lName: user.lName,
         email: user.email,
@@ -109,7 +110,19 @@ const loginUser = asyncHandler(async (req, res) => {
         height: user.height,
         weight: user.weight,
         weightUnit: user.weightUnit,
-        heightUnit: user.heightUnit
+        heightUnit: user.heightUnit,
+        weightUnit: user.weightUnit,
+        heightUnit: user.heightUnit,
+        totalWorkoutTime: user.totalWorkoutTime,
+        totalCaloriesBurn: user.totalCaloriesBurn, 
+        totalWorkoutDone: user.totalWorkoutDone,
+        totalPoints: user.totalPoints,
+        activePlan: user.activePlan,
+        isEmailVerified: user.isEmailVerified,
+        isNumberVerified: user.isNumberVerified,
+        planExpiryDate: user.planExpiryDate,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
       }
     });
   } catch (error) {

@@ -1,6 +1,7 @@
+require('dotenv').config();
 const path = require('path');
 const express = require('express');
-const dotenv = require('dotenv').config();
+// const dotenv = require('dotenv').config();
 const connectDB = require('./config/dbConnection');
 const socketio = require("socket.io");
 const port = process.env.PORT || 3000;
