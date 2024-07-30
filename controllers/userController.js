@@ -132,6 +132,7 @@ const editUserProfile = asyncHandler(async (req, res) => {
     res.status(200).json({
       message: "User profile updated successfully",
       user: {
+        fcmToken: user.fcmToken,
         id: user._id,
         fName: user.fName,
         lName: user.lName,
@@ -172,8 +173,8 @@ const getUserById = asyncHandler(async (req, res) => {
     res.status(200).json({
       message: "User retrieved successfully",
       user: {
-        userId: user._id,
         fcmToken: user.fcmToken,
+        userId: user._id,
         fName: user.fName,
         lName: user.lName,
         email: user.email,
