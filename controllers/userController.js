@@ -73,7 +73,7 @@ const signUpUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-  const { email, password, fcmToken } = req.body;
+  const { email, password } = req.body;
 
   try {
     // Check if user exists
@@ -88,14 +88,10 @@ const loginUser = asyncHandler(async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Update user's fcmToken
-    user.fcmToken = fcmToken;
-    await user.save();
-
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id },
-      process.env.ACCESS_TOKEN_SECRET,
+      process.env.ACCESS_TOKEN_SECERT,
       { expiresIn: "7d" }
     );
 
@@ -104,7 +100,6 @@ const loginUser = asyncHandler(async (req, res) => {
       token,
       user: {
         id: user._id,
-        fcmToken: user.fcmToken,
         fName: user.fName,
         lName: user.lName,
         email: user.email,
@@ -122,7 +117,6 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
-
 const editUserProfile = asyncHandler(async (req, res) => {
   const { userId } = req.params;
   const updates = req.body;
@@ -139,7 +133,6 @@ const editUserProfile = asyncHandler(async (req, res) => {
       message: "User profile updated successfully",
       user: {
         id: user._id,
-        fcmToken: user.fcmToken,
         fName: user.fName,
         lName: user.lName,
         email: user.email,
@@ -180,9 +173,9 @@ const getUserById = asyncHandler(async (req, res) => {
       message: "User retrieved successfully",
       user: {
         userId: user._id,
-        fcmToken: user.fcmToken,
         fName: user.fName,
         lName: user.lName,
+        fcmToken: user.fcmToken,
         email: user.email,
         image: user.image,
         phoneNumber: user.phoneNumber,
