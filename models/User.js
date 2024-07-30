@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 
 const userSchema = mongoose.Schema({
   id: { type: String },
-  fcmToken: { type: String },
+  fcmToken: { type: String, default:"" },
   fName: { type: String },
   lName: { type: String },
   image: { type: String ,default: null},
@@ -32,10 +32,16 @@ const userSchema = mongoose.Schema({
   totalPoints: { type: Number, default: 0 },
   isEmailVerified: { type: Boolean, default: false },
   isNumberVerified: { type: Boolean, default: false },
-  activePlan: { type: String },
+  activePlan: { type: String, default:"free plan" },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
-  planExpiryDate: { type: Date },
+  planExpiryDate: {
+    type: Date,
+    default: function() {
+      const now = new Date();
+      return new Date(now.setMonth(now.getMonth() + 1));
+    }
+  }
 },
 {
   timestamps: true,

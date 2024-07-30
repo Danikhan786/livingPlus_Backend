@@ -73,7 +73,7 @@ const signUpUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, fcmToken } = req.body;
 
   try {
     // Check if user exists
@@ -88,10 +88,14 @@ const loginUser = asyncHandler(async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    // Update user's fcmToken
+    user.fcmToken = fcmToken;
+    await user.save();
+
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id },
-      process.env.ACCESS_TOKEN_SECERT,
+      process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "7d" }
     );
 
@@ -100,6 +104,7 @@ const loginUser = asyncHandler(async (req, res) => {
       token,
       user: {
         id: user._id,
+        fcmToken: user.fcmToken,
         fName: user.fName,
         lName: user.lName,
         email: user.email,
@@ -117,6 +122,7 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
+
 const editUserProfile = asyncHandler(async (req, res) => {
   const { userId } = req.params;
   const updates = req.body;
@@ -132,7 +138,8 @@ const editUserProfile = asyncHandler(async (req, res) => {
     res.status(200).json({
       message: "User profile updated successfully",
       user: {
-        id: user.id,
+        id: user._id,
+        fcmToken: user.fcmToken,
         fName: user.fName,
         lName: user.lName,
         email: user.email,
@@ -146,7 +153,14 @@ const editUserProfile = asyncHandler(async (req, res) => {
         totalWorkoutTime: user.totalWorkoutTime,
         totalCaloriesBurn: user.totalCaloriesBurn,
         totalWorkoutDone: user.totalWorkoutDone,
-        totalPoints: user.totalPoints
+        totalPoints: user.totalPoints,
+        activePlan: user.activePlan,
+        isEmailVerified: user.isEmailVerified,
+        isNumberVerified: user.isNumberVerified,
+        planExpiryDate: user.planExpiryDate,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+
       }
     });
   } catch (error) {
@@ -165,7 +179,8 @@ const getUserById = asyncHandler(async (req, res) => {
     res.status(200).json({
       message: "User retrieved successfully",
       user: {
-        id: user.id,
+        userId: user._id,
+        fcmToken: user.fcmToken,
         fName: user.fName,
         lName: user.lName,
         email: user.email,
@@ -180,7 +195,13 @@ const getUserById = asyncHandler(async (req, res) => {
         totalWorkoutTime: user.totalWorkoutTime,
         totalCaloriesBurn: user.totalCaloriesBurn, 
         totalWorkoutDone: user.totalWorkoutDone,
-        totalPoints: user.totalPoints
+        totalPoints: user.totalPoints,
+        activePlan: user.activePlan,
+        isEmailVerified: user.isEmailVerified,
+        isNumberVerified: user.isNumberVerified,
+        planExpiryDate: user.planExpiryDate,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
         
       }
     });
@@ -188,6 +209,8 @@ const getUserById = asyncHandler(async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+
 
 const updatePassword = asyncHandler(async (req, res) => {
   const { userId } = req.params;
