@@ -173,9 +173,9 @@ const getUserById = asyncHandler(async (req, res) => {
       message: "User retrieved successfully",
       user: {
         userId: user._id,
+        fcmToken: user.fcmToken,
         fName: user.fName,
         lName: user.lName,
-        fcmToken: user.fcmToken,
         email: user.email,
         image: user.image,
         phoneNumber: user.phoneNumber,
