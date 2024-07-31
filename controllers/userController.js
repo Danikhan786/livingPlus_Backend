@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const upload = require("../middleware/uploadHandler");
 
 const signUpUser = asyncHandler(async (req, res) => {
   const {
@@ -18,10 +19,30 @@ const signUpUser = asyncHandler(async (req, res) => {
     heightUnit
   } = req.body;
 
-   // Basic validation
-   if (!fName || !lName || !email || !phoneNumber || !password || !gender || !age || !height || !weight || !weightUnit || !heightUnit) {
+  // Basic validation
+  if (!fName || !lName || !email || !phoneNumber || !password || !gender || !age || !height || !weight || !weightUnit || !heightUnit) {
     return res.status(400).json({ message: "All fields are required" });
   }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Invalid email format" });
+  }
+
+  // Validate password
+  const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,15}$/;
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({
+      message: "Password must be 8-15 characters long, include at least one uppercase letter, one number, and one special character"
+    });
+  }
+
+  // Validate name length
+  if (fName.length > 30 || lName.length > 30) {
+    return res.status(400).json({ message: "First name and Last name must be less than 30 characters" });
+  }
+
   try {
     // Check if email or phone number already exists
     const existingEmail = await User.findOne({ email });
@@ -71,6 +92,7 @@ const signUpUser = asyncHandler(async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
@@ -276,5 +298,28 @@ const checkBlacklistedToken = (req, res, next) => {
   next();
 };
 
+const uploadProfileImage = asyncHandler(async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-module.exports = { signUpUser, loginUser, editUserProfile, updatePassword, getUserById, logoutUser, checkBlacklistedToken};
+    upload(req, res, function (err) {
+      if (err && err.message && err.message.storageErrors && Array.isArray(err.message.storageErrors) && err.message.storageErrors.length > 0) {
+        return res.status(400).json({ message: err });
+      }
+
+      const profileImage = req.file.path;
+
+      user.profile_image = profileImage;
+      user.save();
+
+      res.json({ message: "File uploaded successfully", profile_image: profileImage });
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+module.exports = { signUpUser, loginUser, editUserProfile, updatePassword, getUserById, logoutUser, checkBlacklistedToken, uploadProfileImage};

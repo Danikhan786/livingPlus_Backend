@@ -1,6 +1,6 @@
 const express = require("express");
 const userController = require("../controllers/userController");
-
+const upload = require("../middleware/uploadHandler");
 
 const router = express.Router();
 
@@ -18,6 +18,8 @@ router.put("/profile/:userId", userController.editUserProfile);
 
 // Route for updating user password
 router.put("/password/:userId", userController.updatePassword);
+
+router.post("/:id/profile-image", upload, userController.uploadProfileImage);
 
 // Apply the middleware to protect routes
 router.use(userController.checkBlacklistedToken);
