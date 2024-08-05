@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Serve static files from the 'uploads' directory
-// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/user", require("./routes/userRoutes")); // User routes
 app.use("/exercise", require("./routes/exerciseRoutes")); // User routes
 app.use("/mainworkout", require("./routes/mainWorkOutsRoutes")); // User routes

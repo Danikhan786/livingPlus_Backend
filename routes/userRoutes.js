@@ -21,9 +21,6 @@ router.put("/password/:userId", userController.updatePassword);
 
 router.post("/:id/profile-image", upload, userController.uploadProfileImage);
 
-//Update Fcm Token
-router.put('/update-fcm-token', userController.updateFcmToken);
-
 // Apply the middleware to protect routes
 router.use(userController.checkBlacklistedToken);
 
