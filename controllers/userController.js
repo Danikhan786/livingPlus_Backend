@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const upload = require("../middleware/uploadHandler");
-const { sendNotification } = require("../utils/fcm");
+// const { sendNotification } = require("../utils/fcm");
   
 const signUpUser = asyncHandler(async (req, res) => {
   const {
