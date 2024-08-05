@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const upload = require("../middleware/uploadHandler");
+const { sendNotification } = require("../utils/fcm");
 
 const signUpUser = asyncHandler(async (req, res) => {
   const {
@@ -95,7 +96,7 @@ const signUpUser = asyncHandler(async (req, res) => {
 
 
 const loginUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, fcmToken } = req.body;
 
   try {
     // Check if user exists
@@ -116,6 +117,10 @@ const loginUser = asyncHandler(async (req, res) => {
       process.env.ACCESS_TOKEN_SECERT,
       { expiresIn: "7d" }
     );
+
+    // Update user's FCM token
+    user.fcmToken = fcmToken;
+    await user.save();
 
     res.status(200).json({
       message: "Login successful",
@@ -324,4 +329,31 @@ const uploadProfileImage = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { signUpUser, loginUser, editUserProfile, updatePassword, getUserById, logoutUser, checkBlacklistedToken, uploadProfileImage};
+
+// Update FCM token
+const updateFcmToken = asyncHandler(async (req, res) => {
+  try {
+    const { userId, fcmToken } = req.body;
+
+    // Validate inputs
+    if (!userId || !fcmToken) {
+      return res.status(400).json({ message: "User ID and FCM token are required" });
+    }
+
+    // Find the user by ID
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update the FCM token
+    user.fcmToken = fcmToken;
+    await user.save();
+
+    // Return success message
+    res.status(200).json({ message: "FCM token updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+module.exports = { signUpUser, loginUser, editUserProfile, updatePassword, getUserById, logoutUser, checkBlacklistedToken, uploadProfileImage, updateFcmToken};
