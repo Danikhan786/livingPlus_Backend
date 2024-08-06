@@ -19,6 +19,7 @@ app.use("/exercise", require("./routes/exerciseRoutes")); // User routes
 app.use("/mainworkout", require("./routes/mainWorkOutsRoutes")); // User routes
 app.use("/notification", require("./routes/notificationRoutes")); // User routes
 app.use("/workout", require("./routes/workoutsRoutes")); // Pin routes
+app.use("/scheduler", require("./routes/schedulerRoutes")); // Scheduler routes
 
 
 const server = app.listen(port, () => {

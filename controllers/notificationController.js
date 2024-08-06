@@ -13,7 +13,7 @@ const getAllNotifications = asyncHandler(async (req, res) => {
 
 // Create a new notification
 const createNotification = asyncHandler(async (req, res) => {
-  const { title, body } = req.body;
+  const { title, body} = req.body;
 
   try {
     const newNotification = new Notification({
