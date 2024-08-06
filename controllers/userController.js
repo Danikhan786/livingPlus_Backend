@@ -9,6 +9,7 @@ const signUpUser = asyncHandler(async (req, res) => {
   const {
     fName,
     lName,
+    fcmToken,
     email,
     phoneNumber,
     password,
@@ -60,6 +61,7 @@ const signUpUser = asyncHandler(async (req, res) => {
     const user = new User({
       fName,
       lName,
+      fcmToken,
       email,
       phoneNumber,
       password,
@@ -79,6 +81,7 @@ const signUpUser = asyncHandler(async (req, res) => {
         id: user._id,
         fName: user.fName,
         lName: user.lName,
+        fcmToken: user.fcmToken,
         email: user.email,
         phoneNumber: user.phoneNumber,
         gender: user.gender,
@@ -177,6 +180,7 @@ const editUserProfile = asyncHandler(async (req, res) => {
         id: user._id,
         fName: user.fName,
         lName: user.lName,
+        fcmToken: user.fcmToken,
         email: user.email,
         profile_image: user.profile_image,
         phoneNumber: user.phoneNumber,
@@ -215,10 +219,10 @@ const getUserById = asyncHandler(async (req, res) => {
     res.status(200).json({
       message: "User retrieved successfully",
       user: {
-        fcmToken: user.fcmToken,
         id: user._id,
         fName: user.fName,
         lName: user.lName,
+        fcmToken: user.fcmToken,
         email: user.email,
         profile_image: user.profile_image,
         phoneNumber: user.phoneNumber,
