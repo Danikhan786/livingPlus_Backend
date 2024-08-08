@@ -1,25 +1,16 @@
 const asyncHandler = require("express-async-handler");
 const Scheduler = require("../models/Scheduler");
-// const cron = require('node-cron');
-// const { sendNotification } = require('../utils/fcm');
-
-// Get all Schedulers
-const getAllSchedulers = asyncHandler(async (req, res) => {
-    try {
-        const schedulers = await Scheduler.find();
-        res.status(200).json(schedulers);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
+const Notification = require("../models/Notification");
+const User = require("../models/User");
+const { sendNotification } = require('../utils/fcm');
+const cron = require('node-cron');
 
 // Create a new Scheduler
 const createScheduler = asyncHandler(async (req, res) => {
-    const { userId, time, day: initialDay, notificationType } = req.body; // Renaming day to initialDay
-    let day = initialDay; // Use let so we can reassign day
+    const { userId, time, day: initialDay, notificationType } = req.body;
+    let day = initialDay;
 
     try {
-        // Validate required fields
         if (!userId || !time || !day || !notificationType) {
             return res.status(400).json({ message: "All fields are required" });
         }
@@ -38,16 +29,45 @@ const createScheduler = asyncHandler(async (req, res) => {
         const newScheduler = new Scheduler({
             userId,
             time,
-            day,  // Save as an array of days
+            day,
             notificationType,
         });
 
         const createdScheduler = await newScheduler.save();
 
+        // Schedule notifications based on selected days and time
+        day.forEach(selectedDay => {
+            const cronTime = getCronSchedule(selectedDay, time);
+
+            cron.schedule(cronTime, async () => {
+                const user = await User.findById(userId);
+                if (user && user.fcmToken) {
+                    sendNotification(user.fcmToken, 'Scheduled Reminder', `Reminder: "${notificationType}" is due now.`);
+                }
+                const notification = new Notification({
+                    schedulerId: createdScheduler._id,
+                    userId: user._id,
+                    title: 'Scheduled Reminder',
+                    body: `Reminder: "${notificationType}" is due now.`,
+                });
+                await notification.save();
+            });
+        });
+
         res.status(201).json(createdScheduler);
     } catch (error) {
         console.error("Error creating scheduler:", error.message);
         res.status(500).json({ message: "Server error: " + error.message });
+    }
+});
+
+// Get all Schedulers
+const getAllSchedulers = asyncHandler(async (req, res) => {
+    try {
+        const schedulers = await Scheduler.find();
+        res.status(200).json(schedulers);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 });
 
@@ -74,19 +94,19 @@ const updateScheduler = asyncHandler(async (req, res) => {
     let { userId, time, day, notificationType } = req.body;
 
     try {
-         // Adjust the day field based on its value
-         if (day === "everyday") {
+        if (day === "everyday") {
             day = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
         } else if (day === "mon-fri") {
             day = ["monday", "tuesday", "wednesday", "thursday", "friday"];
         } else if (day === "weekend") {
             day = ["saturday", "sunday"];
         } else if (typeof day === "string") {
-            day = [day]; // Ensure it's an array if a single day is passed
+            day = [day];
         }
+
         const updatedScheduler = await Scheduler.findByIdAndUpdate(
             id,
-            { userId, time, day, notificationType }, // Update with adjusted day array
+            { userId, time, day, notificationType },
             { new: true }
         );
 
@@ -117,67 +137,31 @@ const deleteScheduler = asyncHandler(async (req, res) => {
     }
 });
 
-// Function to create cron expression based on time and day
-// const getCronExpression = (time, day) => {
-//     const [hour, minute] = time.split(':');
-//     let dayOfWeek;
+// Helper function to generate cron schedule string
+const getCronSchedule = (day, time) => {
+    const [hour, minute] = time.split(':').map(Number);
+    const dayOfWeek = getCronDayOfWeek(day);
+    return `${minute} ${hour} * * ${dayOfWeek}`;
+};
 
-//     switch (day.toLowerCase()) {
-//         case 'sunday':
-//             dayOfWeek = '0';
-//             break;
-//         case 'monday':
-//             dayOfWeek = '1';
-//             break;
-//         case 'tuesday':
-//             dayOfWeek = '2';
-//             break;
-//         case 'wednesday':
-//             dayOfWeek = '3';
-//             break;
-//         case 'thursday':
-//             dayOfWeek = '4';
-//             break;
-//         case 'friday':
-//             dayOfWeek = '5';
-//             break;
-//         case 'saturday':
-//             dayOfWeek = '6';
-//             break;
-//         case 'everyday':
-//             dayOfWeek = '*';
-//             break;
-//         default:
-//             dayOfWeek = '*';
-//     }
+// Helper function to map days to cron day numbers
+const getCronDayOfWeek = (day) => {
+    const daysMap = {
+        'sunday': 0,
+        'monday': 1,
+        'tuesday': 2,
+        'wednesday': 3,
+        'thursday': 4,
+        'friday': 5,
+        'saturday': 6,
+    };
+    return daysMap[day.toLowerCase()];
+};
 
-//     return `${minute} ${hour} * * ${dayOfWeek}`;
-// };
-
-// Check for expired schedules and remove them
-// const checkExpiredSchedules = async () => {
-//     try {
-//         const now = new Date();
-//         const expiredSchedules = await Scheduler.find({ time: { $lt: now } });
-
-//         for (const schedule of expiredSchedules) {
-//             await Scheduler.findByIdAndDelete(schedule._id);
-//         }
-//     } catch (error) {
-//         console.error("Error checking expired schedules:", error.message);
-//     }
-// };
-
-// Schedule the cron job to run every 30 seconds
-// cron.schedule('*/30 * * * * *', async () => {
-//     console.log('Running a task every 30 seconds');
-//     await checkExpiredSchedules();
-// });
-
-
-// Schedule the cron job to check for expired schedules every day at midnight
-// cron.schedule('0 0 * * *', checkExpiredSchedules);
-
-module.exports = { getAllSchedulers, createScheduler, getSchedulerById, updateScheduler, deleteScheduler };
-
-// checkExpiredSchedules
+module.exports = {
+    getAllSchedulers,
+    createScheduler,
+    getSchedulerById,
+    updateScheduler,
+    deleteScheduler,
+};
