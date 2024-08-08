@@ -15,37 +15,39 @@ const getAllSchedulers = asyncHandler(async (req, res) => {
 
 // Create a new Scheduler
 const createScheduler = asyncHandler(async (req, res) => {
-    const { userId, time, day, notificationType } = req.body;
+    const { userId, time, day: initialDay, notificationType } = req.body; // Renaming day to initialDay
+    let day = initialDay; // Use let so we can reassign day
 
-      // Adjust the day field based on its value
-      if (day === "everyday") {
-        day = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
-    } else if (day === "mon-fri") {
-        day = ["monday", "tuesday", "wednesday", "thursday", "friday"];
-    } else if (day === "weekend") {
-        day = ["saturday", "sunday"];
-    } else {
-        day = [day]; // If it's a single day, make it an array for consistency
-    }
     try {
+        // Validate required fields
+        if (!userId || !time || !day || !notificationType) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
+
+        // Adjust the day field based on its value
+        if (day === "everyday") {
+            day = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+        } else if (day === "mon-fri") {
+            day = ["monday", "tuesday", "wednesday", "thursday", "friday"];
+        } else if (day === "weekend") {
+            day = ["saturday", "sunday"];
+        } else if (typeof day === "string") {
+            day = [day]; // Ensure it's an array if a single day is passed
+        }
+
         const newScheduler = new Scheduler({
             userId,
             time,
-            day,
+            day,  // Save as an array of days
             notificationType,
         });
 
         const createdScheduler = await newScheduler.save();
 
-        // Schedule a cron job based on the created scheduler
-        // const cronExpression = getCronExpression(time, day);
-        // cron.schedule(cronExpression, async () => {
-        //     await sendNotification(userId, notificationType);
-        // });
-
         res.status(201).json(createdScheduler);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error("Error creating scheduler:", error.message);
+        res.status(500).json({ message: "Server error: " + error.message });
     }
 });
 
@@ -71,18 +73,17 @@ const updateScheduler = asyncHandler(async (req, res) => {
     const { id } = req.params;
     let { userId, time, day, notificationType } = req.body;
 
-    // Adjust the day field based on its value
-    if (day === "everyday") {
-        day = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
-    } else if (day === "mon-fri") {
-        day = ["monday", "tuesday", "wednesday", "thursday", "friday"];
-    } else if (day === "weekend") {
-        day = ["saturday", "sunday"];
-    } else if (typeof day === "string") {
-        day = [day]; // Ensure it's an array if a single day is passed
-    }
-
     try {
+         // Adjust the day field based on its value
+         if (day === "everyday") {
+            day = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+        } else if (day === "mon-fri") {
+            day = ["monday", "tuesday", "wednesday", "thursday", "friday"];
+        } else if (day === "weekend") {
+            day = ["saturday", "sunday"];
+        } else if (typeof day === "string") {
+            day = [day]; // Ensure it's an array if a single day is passed
+        }
         const updatedScheduler = await Scheduler.findByIdAndUpdate(
             id,
             { userId, time, day, notificationType }, // Update with adjusted day array
