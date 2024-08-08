@@ -54,7 +54,7 @@ const createScheduler = asyncHandler(async (req, res) => {
                         schedulerId: createdScheduler._id,
                         userId: user._id,
                         title: 'PERFECT GYM CLUB',
-                        body: `Hey "${user.fName}" Body Max classes start in 30 minutes. Don’t forget about the water and hurry up!`,
+                        body: `Hey "${user.fName}" Body Max classes start . Don’t forget about the water and hurry up!`,
                         // body: `Reminder: "${notificationType}" is due now.`,
                     });
 
@@ -71,7 +71,6 @@ const createScheduler = asyncHandler(async (req, res) => {
         res.status(500).json({ message: "Server error: " + error.message });
     }
 });
-
 
 // Get all Schedulers
 const getAllSchedulers = asyncHandler(async (req, res) => {
