@@ -1,7 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Scheduler = require("../models/Scheduler");
-const cron = require('node-cron');
-const { sendNotification } = require('../utils/fcm');
+// const cron = require('node-cron');
+// const { sendNotification } = require('../utils/fcm');
 
 // Get all Schedulers
 const getAllSchedulers = asyncHandler(async (req, res) => {
@@ -17,6 +17,16 @@ const getAllSchedulers = asyncHandler(async (req, res) => {
 const createScheduler = asyncHandler(async (req, res) => {
     const { userId, time, day, notificationType } = req.body;
 
+      // Adjust the day field based on its value
+      if (day === "everyday") {
+        day = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+    } else if (day === "mon-fri") {
+        day = ["monday", "tuesday", "wednesday", "thursday", "friday"];
+    } else if (day === "weekend") {
+        day = ["saturday", "sunday"];
+    } else {
+        day = [day]; // If it's a single day, make it an array for consistency
+    }
     try {
         const newScheduler = new Scheduler({
             userId,
@@ -26,6 +36,13 @@ const createScheduler = asyncHandler(async (req, res) => {
         });
 
         const createdScheduler = await newScheduler.save();
+
+        // Schedule a cron job based on the created scheduler
+        // const cronExpression = getCronExpression(time, day);
+        // cron.schedule(cronExpression, async () => {
+        //     await sendNotification(userId, notificationType);
+        // });
+
         res.status(201).json(createdScheduler);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -52,10 +69,25 @@ const getSchedulerById = asyncHandler(async (req, res) => {
 // Update a Scheduler
 const updateScheduler = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const updates = req.body;
+    let { userId, time, day, notificationType } = req.body;
+
+    // Adjust the day field based on its value
+    if (day === "everyday") {
+        day = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+    } else if (day === "mon-fri") {
+        day = ["monday", "tuesday", "wednesday", "thursday", "friday"];
+    } else if (day === "weekend") {
+        day = ["saturday", "sunday"];
+    } else if (typeof day === "string") {
+        day = [day]; // Ensure it's an array if a single day is passed
+    }
 
     try {
-        const updatedScheduler = await Scheduler.findByIdAndUpdate(id, updates, { new: true });
+        const updatedScheduler = await Scheduler.findByIdAndUpdate(
+            id,
+            { userId, time, day, notificationType }, // Update with adjusted day array
+            { new: true }
+        );
 
         if (!updatedScheduler) {
             return res.status(404).json({ message: "Scheduler not found" });
@@ -84,7 +116,7 @@ const deleteScheduler = asyncHandler(async (req, res) => {
     }
 });
 
-// // Function to create cron expression based on time and day
+// Function to create cron expression based on time and day
 // const getCronExpression = (time, day) => {
 //     const [hour, minute] = time.split(':');
 //     let dayOfWeek;
@@ -121,7 +153,7 @@ const deleteScheduler = asyncHandler(async (req, res) => {
 //     return `${minute} ${hour} * * ${dayOfWeek}`;
 // };
 
-// // Check for expired schedules and remove them
+// Check for expired schedules and remove them
 // const checkExpiredSchedules = async () => {
 //     try {
 //         const now = new Date();
@@ -135,7 +167,7 @@ const deleteScheduler = asyncHandler(async (req, res) => {
 //     }
 // };
 
-// // Schedule the cron job to run every 30 seconds
+// Schedule the cron job to run every 30 seconds
 // cron.schedule('*/30 * * * * *', async () => {
 //     console.log('Running a task every 30 seconds');
 //     await checkExpiredSchedules();
@@ -145,4 +177,6 @@ const deleteScheduler = asyncHandler(async (req, res) => {
 // Schedule the cron job to check for expired schedules every day at midnight
 // cron.schedule('0 0 * * *', checkExpiredSchedules);
 
-module.exports = { getAllSchedulers, createScheduler, getSchedulerById, updateScheduler, deleteScheduler, };
+module.exports = { getAllSchedulers, createScheduler, getSchedulerById, updateScheduler, deleteScheduler };
+
+// checkExpiredSchedules
