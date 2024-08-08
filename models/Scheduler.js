@@ -2,7 +2,8 @@ const mongoose = require("mongoose");
 
 const schedulerSchema = mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  time: { type: String, required: true }, // The time of the day for the schedule in HH:mm format
+  time: { type: String, required: true }, // The time of the day for the schedule (in HH:mm format)
+  timeFormat: { type: String, enum: ['AM', 'PM'], required: true }, // AM or PM format
   day: { type: [String], required: true }, // An array of days (e.g., ["monday", "wednesday"])
   notificationType: { type: String, required: true }, // The type of notification to be sent
 

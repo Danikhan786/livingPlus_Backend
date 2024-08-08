@@ -7,14 +7,10 @@ const cron = require('node-cron');
 
 // Create a new Scheduler
 const createScheduler = asyncHandler(async (req, res) => {
-    const { userId, time, day: initialDay, notificationType } = req.body;
+    const { userId, time, timeFormat, day: initialDay, notificationType } = req.body;
     let day = initialDay;
 
     try {
-        if (!userId || !time || !day || !notificationType) {
-            return res.status(400).json({ message: "All fields are required" });
-        }
-
         // Adjust the day field based on its value
         if (day === "everyday") {
             day = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
@@ -23,12 +19,13 @@ const createScheduler = asyncHandler(async (req, res) => {
         } else if (day === "weekend") {
             day = ["saturday", "sunday"];
         } else if (typeof day === "string") {
-            day = [day]; // Ensure it's an array if a single day is passed
+            day = [day];
         }
 
         const newScheduler = new Scheduler({
             userId,
             time,
+            timeFormat,
             day,
             notificationType,
         });
@@ -37,20 +34,33 @@ const createScheduler = asyncHandler(async (req, res) => {
 
         // Schedule notifications based on selected days and time
         day.forEach(selectedDay => {
-            const cronTime = getCronSchedule(selectedDay, time);
+            const cronTime = getCronSchedule(selectedDay, time, timeFormat);
 
             cron.schedule(cronTime, async () => {
-                const user = await User.findById(userId);
-                if (user && user.fcmToken) {
-                    sendNotification(user.fcmToken, 'Scheduled Reminder', `Reminder: "${notificationType}" is due now.`);
+                try {
+                    const user = await User.findById(userId);
+                    if (!user) {
+                        console.error(`User not found for ID: ${userId}`);
+                        return;
+                    }
+
+                    if (user.fcmToken) {
+                        sendNotification(user.fcmToken, 'Scheduled Reminder', `Reminder: "${notificationType}" is due now.`);
+                    } else {
+                        console.error(`FCM token missing for user ID: ${userId}`);
+                    }
+
+                    const notification = new Notification({
+                        schedulerId: createdScheduler._id,
+                        userId: user._id,
+                        title: 'Scheduled Reminder',
+                        body: `Reminder: "${notificationType}" is due now.`,
+                    });
+
+                    await notification.save();
+                } catch (err) {
+                    console.error('Error sending notification:', err);
                 }
-                const notification = new Notification({
-                    schedulerId: createdScheduler._id,
-                    userId: user._id,
-                    title: 'Scheduled Reminder',
-                    body: `Reminder: "${notificationType}" is due now.`,
-                });
-                await notification.save();
             });
         });
 
@@ -60,6 +70,7 @@ const createScheduler = asyncHandler(async (req, res) => {
         res.status(500).json({ message: "Server error: " + error.message });
     }
 });
+
 
 // Get all Schedulers
 const getAllSchedulers = asyncHandler(async (req, res) => {
@@ -91,7 +102,7 @@ const getSchedulerById = asyncHandler(async (req, res) => {
 // Update a Scheduler
 const updateScheduler = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    let { userId, time, day, notificationType } = req.body;
+    let { userId, time, day, timeFormat,notificationType } = req.body;
 
     try {
         if (day === "everyday") {
@@ -106,7 +117,7 @@ const updateScheduler = asyncHandler(async (req, res) => {
 
         const updatedScheduler = await Scheduler.findByIdAndUpdate(
             id,
-            { userId, time, day, notificationType },
+            { userId, time, day, timeFormat,notificationType },
             { new: true }
         );
 
@@ -138,10 +149,19 @@ const deleteScheduler = asyncHandler(async (req, res) => {
 });
 
 // Helper function to generate cron schedule string
-const getCronSchedule = (day, time) => {
+const getCronSchedule = (day, time, timeFormat) => {
     const [hour, minute] = time.split(':').map(Number);
+
+    // Adjust hour based on AM/PM
+    let adjustedHour = hour;
+    if (timeFormat === 'PM' && hour !== 12) {
+        adjustedHour += 12;
+    } else if (timeFormat === 'AM' && hour === 12) {
+        adjustedHour = 0; // Midnight case
+    }
+
     const dayOfWeek = getCronDayOfWeek(day);
-    return `${minute} ${hour} * * ${dayOfWeek}`;
+    return `${minute} ${adjustedHour} * * ${dayOfWeek}`;
 };
 
 // Helper function to map days to cron day numbers
