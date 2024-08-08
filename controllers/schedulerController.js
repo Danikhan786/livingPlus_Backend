@@ -53,8 +53,9 @@ const createScheduler = asyncHandler(async (req, res) => {
                     const notification = new Notification({
                         schedulerId: createdScheduler._id,
                         userId: user._id,
-                        title: 'Scheduled Reminder',
-                        body: `Reminder: "${notificationType}" is due now.`,
+                        title: 'PERFECT GYM CLUB',
+                        body: `Hey "${user.fName}" Body Max classes start in 30 minutes. Don’t forget about the water and hurry up!`,
+                        // body: `Reminder: "${notificationType}" is due now.`,
                     });
 
                     await notification.save();
@@ -158,6 +159,16 @@ const getCronSchedule = (day, time, timeFormat) => {
         adjustedHour += 12;
     } else if (timeFormat === 'AM' && hour === 12) {
         adjustedHour = 0; // Midnight case
+    }
+
+    // Ensure hour is within valid range for cron expression
+    if (adjustedHour < 0 || adjustedHour > 23) {
+        throw new Error(`Invalid hour value: ${adjustedHour}`);
+    }
+
+    // Ensure minute is within valid range for cron expression
+    if (minute < 0 || minute > 59) {
+        throw new Error(`Invalid minute value: ${minute}`);
     }
 
     const dayOfWeek = getCronDayOfWeek(day);
